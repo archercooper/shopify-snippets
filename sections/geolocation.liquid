@@ -8,282 +8,288 @@ A Geolocation section that can be used on more than one regional Shopify site to
 Add to the theme.liquid to enable a geolocation.
 > modal
 > cookies
-> 
+>
 
 {% endcomment %}
 <div id="full-screen-overlay" class="full-screen-overlay" style="display:none;">
 
-    <div id="modal-box" class="modal">
-    
-        <img id="modal_countryCodeFlag" class="flag" src="https://flags.fmcdn.net/data/flags/normal/us.png">
-        <h2 class="u-h1">Free Shipping to <span id="modal_countryName">your country</span></h2>
-        <p>You are now shopping in <span id="modal_currencyName">your local currency</span></p>
-        <a href="#">
-        <button class="Button">Shop Now</button>
-        </a>
-  
-    </div>
-  
+  <div id="modal-box" class="modal">
+
+    <img id="modal_countryCodeFlag" class="flag" src="https://flags.fmcdn.net/data/flags/normal/us.png">
+    <h2 class="u-h1">Free Shipping to <span id="modal_countryName">your country</span></h2>
+    <p>You are now shopping in <span id="modal_currencyName">your local currency</span></p>
+    <a href="#">
+      <button class="Button">Shop Now</button>
+    </a>
+
+  </div>
+
 </div>
-  
-  <script>
-    // Turn DEBUG on or off, no redirects when DEBUG on - just console logs – no console logs when off
-    const DEBUG = false;
-  
-    if (DEBUG) console.log('Begin GeoLocation')
-    // Set the variables for the different locations
-    const thisSite = window.location.hostname;
-    const queryString = window.location.search;
-    var pathname = window.location.pathname;
-    var fragment = window.location.hash;
-    var context = '/browsing_context_suggestions.json?currency[enabled]=true';
-    var currency = Shopify.currency.active;
 
-    if (DEBUG) console.log('Active Currency:', currency);
+<script>
+  // Turn DEBUG on or off, no redirects when DEBUG on - just console logs – no console logs when off
+  const DEBUG = false;
 
-    var contextcall = thisSite + context;
-    
-    if (DEBUG) console.log(contextcall);
-    
-    // This is an array of the stores along with a country code we match against later, 
-    // these could probably be added to the section schema and rendered that way, maybe as blocks?
-    
-    stores = {
-        'gb' : 'yourstore.co.uk'
-    }
-  
-    var modal = document.getElementById("full-screen-overlay");
-  
-    // An array of what we call EU countries
-    // const euCountries = ["Albania", "Andorra", "Armenia", "Austria", "Belarus", "Belgium", "Bosnia+And+Herzegovina", "Bosnia And Herzegovina", "Bulgaria", "Croatia", "Cyprus", "Czech+Republic", "Czech Republic", "Denmark", "Estonia", "Finland", "France", "Georgia", "Germany", "Greece", "Hungary", "Iceland", "Italy", "Kosovo", "Latvia", "Liechtenstein", "Lithuania", "Luxembourg", "Macedonia", "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "Norway", "Poland", "Portugal", "Reunion", "Romania", "San+Marino", "San Marino", "Serbia", "Slovakia", "Slovenia", "Spain", "Sweden", "Switzerland", "Turkey", "Ukraine", "Vatican+City", "Vatican City"];
-    const euCountryCodes = ["al", "ad", "am", "at", "by", "be", "ba", "bg", "hr", "cy", "cz", "dk", "ee", "fi", "fr", "ge", "de", "gr", "hu", "is", "it", "xk", "lv", "li", "lt", "lu", "mk", "mt", "md", "mc", "me", "nl", "no", "pl", "pt", "re", "ro", "sm", "rs", "sk", "sl", "es", "se", "ch", "tr", "ua", "va"];
+  if (DEBUG) console.log('Begin GeoLocation')
+  // Set the variables for the different locations
+  const thisSite = window.location.hostname;
+  const queryString = window.location.search;
+  var pathname = window.location.pathname;
+  var fragment = window.location.hash;
+  var context = '/browsing_context_suggestions.json?currency[enabled]=true';
+  var currency = Shopify.currency.active;
 
-    if (queryString == '?noredirect') 
+  if (DEBUG) console.log('Active Currency:', currency);
+
+  var contextcall = thisSite + context;
+
+  if (DEBUG) console.log(contextcall);
+
+  // This is an array of the stores along with a country code we match against later, 
+  // these could probably be added to the section schema and rendered that way, maybe as blocks?
+
+  stores = {
+    'gb': 'yourstore.co.uk'
+  }
+
+  var modal = document.getElementById("full-screen-overlay");
+
+  // An array of what we call EU countries
+  // const euCountries = ["Albania", "Andorra", "Armenia", "Austria", "Belarus", "Belgium", "Bosnia+And+Herzegovina", "Bosnia And Herzegovina", "Bulgaria", "Croatia", "Cyprus", "Czech+Republic", "Czech Republic", "Denmark", "Estonia", "Finland", "France", "Georgia", "Germany", "Greece", "Hungary", "Iceland", "Italy", "Kosovo", "Latvia", "Liechtenstein", "Lithuania", "Luxembourg", "Macedonia", "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "Norway", "Poland", "Portugal", "Reunion", "Romania", "San+Marino", "San Marino", "Serbia", "Slovakia", "Slovenia", "Spain", "Sweden", "Switzerland", "Turkey", "Ukraine", "Vatican+City", "Vatican City"];
+  const euCountryCodes = ["al", "ad", "am", "at", "by", "be", "ba", "bg", "hr", "cy", "cz", "dk", "ee", "fi", "fr", "ge", "de", "gr", "hu", "is", "it", "xk", "lv", "li", "lt", "lu", "mk", "mt", "md", "mc", "me", "nl", "no", "pl", "pt", "re", "ro", "sm", "rs", "sk", "sl", "es", "se", "ch", "tr", "ua", "va"];
+
+  if (queryString == '?noredirect')
     //   This override allows admins to access all the sites. 
     //   We could look to see if the user is admin logged in, but that has always proven flaky for me. 
     //   This gives us the opportunity to use a simple query string AND share that with collaborators.
     //   To use add ?noredirect to the end of the URL you want to access and it will set a 7 day cookie
 
-      setCookie('admin_noredirect','redirect',7);
+    setCookie('admin_noredirect', 'redirect', 7);
   
     } else {
-  
-      // Check if the cookie already exists 
-      var adminRedirect = getCookie('admin_noredirect');
-  
-      if (adminRedirect) {
-  
-        // Do nothing and log to console
-        if (DEBUG) console.log('Admin Redirect Cookie');
-  
-      } else {
-        
-        if (DEBUG) console.log('No Admin Cookie');
 
-        // Get the contextual browsing suggestions
-        fetch('https://'+contextcall)
-          .then(response => response.json())
-          .then(data => getCountryCode(data) )
-    
-      }
-  
+    // Check if the cookie already exists 
+    var adminRedirect = getCookie('admin_noredirect');
+
+    if (adminRedirect) {
+
+      // Do nothing and log to console
+      if (DEBUG) console.log('Admin Redirect Cookie');
+
+    } else {
+
+      if (DEBUG) console.log('No Admin Cookie');
+
+      // Get the contextual browsing suggestions
+      fetch('https://' + contextcall)
+        .then(response => response.json())
+        .then(data => getCountryCode(data))
+
     }
-    
-    function getCountryCode(json) {
-      if (DEBUG) console.log('JSON: ', json);
-      var countryCode = json.detected_values.country.handle.toLowerCase();
-      var countryName = json.detected_values.country_name;
+
+  }
+
+  
+  function getCountryCode(json) {
+    if (DEBUG) console.log('JSON: ', json);
+    var countryCode = json.detected_values.country.handle.toLowerCase();
+    var countryName = json.detected_values.country_name;
+    //
+    if (json.suggestions[0]) {
       var suggestedCurrency = json.suggestions[0].parts.currency.name;
+      var suggestedCurrencyCode = json.suggestions[0].parts.currency.handle;
       if (DEBUG) console.log('Suggested Currency: ', suggestedCurrency);
-      if (DEBUG) console.log('CountryCode: ', countryCode);
-      placeVisitor(countryCode, countryName, suggestedCurrency);
+      if (DEBUG) console.log('Suggested Currency Code: ', suggestedCurrencyCode);
     }
-    
-    function getJSON(url, qs_params) {
-      function buildQueryString(params) {
-        return Object.entries(params).map(d => `${d[0]}=${d[1]}`).join('&');
+    if (DEBUG) console.log('CountryCode: ', countryCode);
+    placeVisitor(countryCode, countryName, suggestedCurrencyCode);
+  }
+
+  function getJSON(url, qs_params) {
+    function buildQueryString(params) {
+      return Object.entries(params).map(d => `${d[0]}=${d[1]}`).join('&');
+    }
+
+    return new Promise((resolve, reject) => {
+      const qs = qs_params ? '?' + buildQueryString(qs_params) : '';
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', `${url}${qs}`);
+
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          resolve(JSON.parse(xhr.responseText));
+        } else {
+          resolve(xhr.responseText);
+        }
+      };
+      xhr.onerror = () => reject(xhr.statusText);
+      xhr.send();
+    });
+  }
+
+  // Function to set a cookie
+  function setCookie(name, value, days) {
+    var expires = "";
+    if (days) {
+      var date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      expires = "; domain=" + window.location.hostname + ";path=/;expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    if (DEBUG) console.log('Cookie: ' + name);
+  }
+
+  // Function to get a cookie
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+  // Function to locate and place visitor
+  function placeVisitor(country, countryName, currency) {
+
+    if (DEBUG) console.log('Place Visitor Started');
+    var modalDismissed = getCookie('welcome_modal');
+    if (DEBUG) console.log("Visitor:", country, currency, countryName);
+
+    if (thisSite.includes('shopifypreview.com')) {
+
+      if (DEBUG) console.log('In preview - do nothing')
+
+    }
+
+    // This is where you need to edit the code to decide what to do in each case
+    // Here we first check if the user's country matches "gb" meaning the UK
+
+    else if (country == 'gb') {
+
+      // Which store _should_ we be on?
+      store = stores.gb;
+
+      if (thisSite != store) {
+
+        if (DEBUG) console.log('Redirect to https://' + store + pathname + queryString + fragment);
+        if (!DEBUG) window.location.assign("https://" + store + pathname + queryString + fragment);
+
+      } else {
+
+        if (DEBUG) console.log('In the right place', modalDismissed);
+
+        if (!modalDismissed) {
+          showModal(country, countryName, currency);
+        }
+
       }
-  
-      return new Promise((resolve, reject) => {
-        const qs = qs_params ? '?' + buildQueryString(qs_params) : '';
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', `${url}${qs}`);
-  
-        xhr.onload = function() {
-          if (xhr.status >= 200 && xhr.status < 400) {
-            resolve(JSON.parse(xhr.responseText));
-          } else {
-            resolve(xhr.responseText);
-          }
-        };
-        xhr.onerror = () => reject(xhr.statusText);
-        xhr.send();
-      });
+
     }
-    
-    // Function to set a cookie
-    function setCookie(name,value,days) {
-      var expires = "";
-      if (days) {
-          var date = new Date();
-          date.setTime(date.getTime() + (days*24*60*60*1000));
-          expires = "; domain=" + window.location.hostname + ";path=/;expires=" + date.toUTCString();
+
+    // Next check if the visitor is from an EU country
+    else if (euCountryCodes.indexOf(country) >= 0) {
+
+      store = stores.eu;
+
+      if (thisSite != store) {
+
+        if (DEBUG) console.log('Redirect to https://' + store + pathname + queryString + fragment);
+        if (!DEBUG) window.location.assign("https://" + store + pathname + queryString + fragment);
+
+      } else {
+
+        if (DEBUG) console.log('In the right place');
+        if (!modalDismissed) {
+          showModal(country, countryName, currency);
+        }
+
       }
-      document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-      if (DEBUG) console.log('Cookie: ' + name);
+
     }
-    
-    // Function to get a cookie
-    function getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-    }
-    
-    // Function to locate and place visitor
-    function placeVisitor(country, countryName, currency) {
-  
-        if (DEBUG) console.log('Place Visitor Started');
-        var modalDismissed = getCookie('welcome_modal');
-        if (DEBUG) console.log("Visitor:", country, currency, countryName);
-  
-        if ( thisSite.includes('shopifypreview.com') ){
-  
-          if (DEBUG) console.log('In preview - do nothing')
-  
+
+    // Finally all other visitors, check if they are on the US site
+    else {
+      if (DEBUG) console.log(country);
+      store = stores.us;
+
+      if (thisSite != store) {
+
+        if (DEBUG) console.log('Redirect to https://' + store + pathname + queryString + fragment);
+        if (!DEBUG) window.location.assign("https://" + store + pathname + queryString + fragment);
+
+      } else {
+
+        if (DEBUG) console.log('In the right place');
+        if (!modalDismissed) {
+          showModal(country, countryName, currency);
         }
-  
-        // This is where you need to edit the code to decide what to do in each case
-        // Here we first check if the user's country matches "gb" meaning the UK
 
-        else if ( country == 'gb' ) {
-
-          // Which store _should_ we be on?
-          store = stores.gb;
-
-          if (thisSite != store) {
-
-            if (DEBUG) console.log('Redirect to https://'+store+pathname+queryString+fragment);
-            if (!DEBUG) window.location.assign("https://"+store+pathname+queryString+fragment);
-
-          } else {
-
-            if (DEBUG) console.log('In the right place', modalDismissed);
-
-            if (!modalDismissed) {
-              showModal(country, countryName, currency);
-            }
-
-          }
-  
-        }
-        
-        // Next check if the visitor is from an EU country
-        else if ( euCountryCodes.indexOf(country) >= 0) {
-
-          store = stores.eu;
-
-          if (thisSite != store) {
-            
-            if (DEBUG) console.log('Redirect to https://'+store+pathname+queryString+fragment);
-            if (!DEBUG) window.location.assign("https://"+store+pathname+queryString+fragment);
-
-          } else {
-
-            if (DEBUG) console.log('In the right place');
-            if (!modalDismissed) {
-              showModal(country, countryName, currency);
-            }
-
-          }
-
-        }
-  
-        // Finally all other visitors, check if they are on the US site
-        else {
-          if (DEBUG) console.log(country);
-          store = stores.us;
-
-          if (thisSite != store) {
-            
-            if (DEBUG) console.log('Redirect to https://'+store+pathname+queryString+fragment);
-            if (!DEBUG) window.location.assign("https://"+store+pathname+queryString+fragment);
-
-          } else {
-
-            if (DEBUG) console.log('In the right place');
-            if (!modalDismissed) {
-              showModal(country, countryName, currency);
-            }
-
-          }
-
-        }
-  
-    }
-  
-    function showModal(country, countryName, currency) {
-      if (DEBUG) console.log('Show the modal!');
-      var image_element = document.getElementById("modal_countryCodeFlag");
-      var country_name = document.getElementById("modal_countryName");
-      var currency_element = document.getElementById("modal_currencyName");
-      // Use this image CDN to get the right flag for the country of the visitor
-      var image_url = 'https://flags.fmcdn.net/data/flags/normal/' + country + '.png'  
-      image_element.src = image_url;
-      country_name.innerText = countryName;
-      currency_element.innerText = currency;
-      modal.style.display = "flex";
-    }
-  
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        modal.style.display = "none";
-        setCookie('welcome_modal', 'shipping_modal', 7);
       }
-    }
-  
-  </script>
-  {% comment %}
 
-  TODO: Add the styling to the section schema
-
-  {% endcomment %}
-  <style>
-    .full-screen-overlay {
-      background-color: rgb(0 0 0 / 72%);
-      height: 100vh;
-      width: 100vw;
-      z-index: 500;
-      position: fixed;
-      top: 0;
-      left: 0;
-      align-items: center;
-      justify-content: center;
-      display: flex;
-      box-shadow: 5px 5px 5px black;
-    }
-    
-    .modal {
-      background-color: black;
-      color: white;
-      max-width: 350px;
-      padding: 4em;
-      text-align: center;
-      z-index: 550;
     }
 
-    .modal button {
-      padding: 12px 25px 16px;
-      background-color: white;
-      color: black;
-      text-transform: lowercase;
-      font-family: 'fugueregular';
-      letter-spacing: 1px;
-      border: none;
+  }
+
+  function showModal(country, countryName, currency) {
+    if (DEBUG) console.log('Show the modal!');
+    var image_element = document.getElementById("modal_countryCodeFlag");
+    var country_name = document.getElementById("modal_countryName");
+    var currency_element = document.getElementById("modal_currencyName");
+    // Use this image CDN to get the right flag for the country of the visitor
+    var image_url = 'https://flags.fmcdn.net/data/flags/normal/' + country + '.png'
+    image_element.src = image_url;
+    country_name.innerText = countryName;
+    currency_element.innerText = currency;
+    modal.style.display = "flex";
+  }
+
+  window.onclick = function (event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+      setCookie('welcome_modal', 'shipping_modal', 7);
     }
-    
-    .flag {
-      max-width: 50px;
-      margin: 0 auto;
-    }
-  </style>
+  }
+
+</script>
+{% comment %}
+
+TODO: Add the styling to the section schema
+
+{% endcomment %}
+<style>
+  .full-screen-overlay {
+    background-color: rgb(0 0 0 / 72%);
+    height: 100vh;
+    width: 100vw;
+    z-index: 500;
+    position: fixed;
+    top: 0;
+    left: 0;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    box-shadow: 5px 5px 5px black;
+  }
+
+  .modal {
+    background-color: black;
+    color: white;
+    max-width: 350px;
+    padding: 4em;
+    text-align: center;
+    z-index: 550;
+  }
+
+  .modal button {
+    padding: 12px 25px 16px;
+    background-color: white;
+    color: black;
+    text-transform: lowercase;
+    font-family: 'fugueregular';
+    letter-spacing: 1px;
+    border: none;
+  }
+
+  .flag {
+    max-width: 50px;
+    margin: 0 auto;
+  }
+</style>
