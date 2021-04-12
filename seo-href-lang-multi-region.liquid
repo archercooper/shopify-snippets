@@ -1,0 +1,18 @@
+{% comment %}
+
+    For use in the <head> of the theme.liquid file.
+
+{% endcomment %}
+
+<head>
+{%- capture seourl -%}
+{{ canonical_url | remove: 'https://' | remove: request.host }}
+{%- endcapture %}
+
+<!-- HREF Lang Tags -->
+<link rel="alternate" href="https://YOURDOMAIN.com{{ seourl }}" hreflang="en-gb" />
+<link rel="alternate" href="https://us.YOURDOMAIN.com{{ seourl }}" hreflang="en-us" />
+<link rel="alternate" href="https://eu.YOURDOMAIN.com{{ seourl }}" hreflang="en" />
+<link rel="alternate" href="https://YOURDOMAIN.com{{ seourl }}" hreflang="x-default" />
+<meta http-equiv="content-language" content="en">
+</head>
